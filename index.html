@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mô phỏng AI trong nông nghiệp (sửa lỗi)</title>
+  <!-- Chart.js CDN (v4+) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body{font-family:Inter, sans-serif; margin:0; background:#eef7ee; color:#222}
+    h2{text-align:center;margin:14px 0}
+    .container{display:flex;gap:18px;justify-content:space-around;padding:16px}
+    .farm{width:45%;text-align:center}
+    .soil{position:relative;width:100%;height:200px;border-radius:12px;background:linear-gradient(#7ac46d,#4e8b45);overflow:hidden;transition:filter .2s}
+    .plant{position:absolute;left:50%;bottom:80px;transform:translateX(-50%);font-size:40px}
+    .spray{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:rgba(0,140,255,0.9);display:none;box-shadow:0 0 8px rgba(0,140,255,0.5)}
+    .panel{width:45%;background:#fff;padding:14px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    .inputs{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    input{width:100px;padding:5px;border-radius:6px;border:1px solid #cfcfcf}
+    button{padding:8px 12px;border-radius:8px;border:0;background:#5fb371;color:white;cursor:pointer}
+    .stats{margin-top:8px;font-size:14px}
+  </style>
+</head>
+<body>
+  <h2> So sánh năng lượng tiêu thụ khi Có và Không Có AI </h2>
+  <div class="container">
+    <div class="farm">
+      <div class="soil" id="soil"><div class="plant">🌱</div><div id="spray" class="spray"></div></div>
+      <p class="stats">Độ ẩm (hiện trung bình): <strong id="moistNum">--</strong>% |
+        Năng lượng (tổng trung bình): <strong id="energyNum">--</strong> Wh</p>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button id="runBtn">▶ Chạy mô phỏng</button>
+        <button id="resetBtn" style="background:#888">⟲ Reset</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="inputs">
+        <label>Độ ẩm ban đầu (%): <input id="initMoist" type="number" value="60" min="0" max="100"></label>
+        <label>Thời gian mô phỏng (giờ): <input id="duration" type="number" value="40" min="1" max="1000"></label>
+        <label>Ngưỡng tưới AI (%): <input id="aiThreshold" type="number" value="40" min="0" max="100"></label>
+      </div>
+
+      <canvas id="chart" width="480" height="300"></canvas>
+
+      <div class="stats">
+        <p>Năng lượng dùng khi có AI: <span id="energyAI">0</span> Wh</p>
+        <p>Năng lượng thực tế (không AI): <span id="energyReal">0</span> Wh</p>
+        <p><strong>Chênh lệch:</strong> <span id="diff">0</span> Wh (<span id="percent">0</span>%)</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // params
+  let tick = 0;
+  let doAmAI = 60, doAmReal = 60;
+  let energyAI = 0, energyReal = 0;
+  const evap = 2, eAi = 5, eSch = 15, waterAi = 20, waterSch = 35;
+  let timer = null, running = false;
+
+  // DOM
+  const moistEl = document.getElementById('moistNum');
+  const energyEl = document.getElementById('energyNum');
+  const soilEl = document.getElementById('soil');
+  const sprayEl = document.getElementById('spray');
+
+  // Chart.js with two y axes
+  const ctx = document.getElementById('chart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Độ ẩm (AI)', data: [], borderColor:'#5fb371', borderDash:[6,4], yAxisID: 'yA', tension:0.3 },
+        { label: 'Độ ẩm (không AI)', data: [], borderColor:'#3a7bd5', yAxisID: 'yA', tension:0.3 },
+        { label: 'Năng lượng (AI)', data: [], borderColor:'#f7a26d', borderDash:[6,4], yAxisID: 'yB', tension:0.3 },
+        { label: 'Năng lượng (không AI)', data: [], borderColor:'#d68910', yAxisID: 'yB', tension:0.3 }
+      ]
+    },
+    options: {
+      animation: false,
+      scales: {
+        yA: { type:'linear', position:'left', min:0, max:100, title:{display:true,text:'Độ ẩm (%)'} },
+        yB: { type:'linear', position:'right', title:{display:true,text:'Năng lượng (Wh)'} }
+      },
+      plugins: { legend: { position: 'top' } }
+    }
+  });
+
+  function resetCharts() {
+    chart.data.labels = [];
+    chart.data.datasets.forEach(ds => ds.data = []);
+    chart.update();
+  }
+
+  function animateSpray() {
+    sprayEl.style.display = 'block';
+    setTimeout(()=> sprayEl.style.display = 'none', 350);
+  }
+
+  function updateUI() {
+    const avgMoist = (doAmAI + doAmReal)/2;
+    const avgEnergy = (energyAI + energyReal)/2;
+    moistEl.textContent = avgMoist.toFixed(1);
+    energyEl.textContent = avgEnergy.toFixed(1);
+    // soil color mapping based on AI moisture (visual cue)
+    const r = Math.round(100 - doAmAI*0.3);
+    const g = Math.round(60 + doAmAI*1.2);
+    const b = Math.round(30 + doAmAI*0.2);
+    soilEl.style.background = `linear-gradient(rgb(${r},${g},${b}), rgb(${Math.max(30,r-30)},${Math.max(40,g-40)},${Math.max(20,b-20)}))`;
+
+    document.getElementById('energyAI').textContent = energyAI.toFixed(1);
+    document.getElementById('energyReal').textContent = energyReal.toFixed(1);
+
+    const diff = energyReal - energyAI;
+    document.getElementById('diff').textContent = diff.toFixed(1);
+    // safe percent: avoid division by zero
+    const percent = energyAI > 0 ? (diff / energyAI * 100) : (energyReal > 0 ? Infinity : 0);
+    document.getElementById('percent').textContent = (isFinite(percent) ? percent.toFixed(1) + '%' : 'Infinity%');
+  }
+
+  function step() {
+    const aiThres = parseFloat(document.getElementById('aiThreshold').value) || 40;
+    tick++;
+    // evaporation
+    doAmAI = Math.max(0, doAmAI - evap);
+    doAmReal = Math.max(0, doAmReal - evap);
+
+    // AI behaviour
+    if (doAmAI < aiThres) {
+      doAmAI = Math.min(100, doAmAI + waterAi);
+      energyAI += eAi;
+      animateSpray();
+    }
+    // non-AI schedule (every 5 ticks)
+    if (tick % 5 === 0) {
+      doAmReal = Math.min(100, doAmReal + waterSch);
+      energyReal += eSch;
+      animateSpray();
+    }
+
+    // push to chart
+    chart.data.labels.push(tick.toString());
+    chart.data.datasets[0].data.push(+doAmAI.toFixed(2));
+    chart.data.datasets[1].data.push(+doAmReal.toFixed(2));
+    chart.data.datasets[2].data.push(+energyAI.toFixed(2));
+    chart.data.datasets[3].data.push(+energyReal.toFixed(2));
+    chart.update();
+
+    updateUI();
+
+    const duration = parseInt(document.getElementById('duration').value) || 40;
+    if (tick >= duration) {
+      clearInterval(timer);
+      running = false;
+    }
+  }
+
+  // controls
+  document.getElementById('runBtn').addEventListener('click', () => {
+    if (running) return;
+    // read inputs (with defaults)
+    const init = parseFloat(document.getElementById('initMoist').value);
+    const duration = parseInt(document.getElementById('duration').value);
+    doAmAI = doAmReal = isNaN(init) ? 60 : init;
+    tick = 0; energyAI = 0; energyReal = 0;
+    resetCharts();
+    updateUI();
+    running = true;
+    // interval 300ms per tick (you can change)
+    timer = setInterval(step, 300);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    clearInterval(timer);
+    running = false;
+    tick = 0;
+    doAmAI = doAmReal = parseFloat(document.getElementById('initMoist').value) || 60;
+    energyAI = 0; energyReal = 0;
+    resetCharts();
+    updateUI();
+  });
+
+  // initial UI
+  updateUI();
+})();
+</script>
+</body>
+</html>
