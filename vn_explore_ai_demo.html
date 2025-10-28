@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Vn Explore AI — Khám phá địa lý cùng AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#071022;
+  --card:#0f2740;
+  --accent:#1A73E8; /* blue */
+  --green:#34A853;
+  --muted:#9fb0c6;
+  --glass: rgba(255,255,255,0.04);
+  --white:#ffffff;
+}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:var(--muted);background:linear-gradient(180deg,#031027 0%, #071a2b 60%);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;align-items:stretch}
+
+/* Header */
+.header{display:flex;justify-content:space-between;align-items:center;padding:18px 28px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(6px)}
+.brand{display:flex;align-items:center;gap:12px;color:var(--white);font-weight:700}
+.logo-wrap{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:linear-gradient(135deg,var(--white),#dfefff);box-shadow:0 6px 18px rgba(26,115,232,0.15)}
+.brand h1{margin:0;font-size:18px}
+.nav{display:flex;gap:10px;align-items:center}
+.btn{padding:8px 12px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-weight:600}
+.cta{background:var(--accent);color:white;box-shadow:0 8px 24px rgba(26,115,232,0.18)}
+
+/* Hero */
+.hero{display:flex;gap:28px;align-items:center;padding:48px;max-width:1200px;margin:28px auto;width:100%}
+.left{flex:1;color:var(--white)}
+.kicker{display:inline-block;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:999px;color:var(--green);font-weight:700;margin-bottom:12px}
+.title{font-size:34px;line-height:1.05;margin:6px 0 12px}
+.lead{color:var(--muted);max-width:60ch;margin-bottom:18px}
+.hero-actions{display:flex;gap:12px}
+.action{padding:12px 16px;border-radius:12px;border:0;background:linear-gradient(90deg,var(--accent),#4da5ff);color:white;font-weight:700;cursor:pointer}
+.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+/* Card with robot + globe */
+.right{width:460px;display:flex;justify-content:center}
+.card{width:100%;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,0.4);position:relative;overflow:hidden}
+.scene{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px}
+.robot-svg{width:220px;height:220px;flex-shrink:0}
+
+/* Sections */
+.container{max-width:1100px;margin:12px auto;padding:12px;width:100%}
+.grid{display:grid;grid-template-columns:1fr 420px;gap:20px}
+.panel{background:var(--card);padding:18px;border-radius:12px;color:var(--muted)}
+
+/* Quiz box */
+.quiz-question{font-weight:700;color:var(--white);margin-bottom:10px;font-size:18px}
+.options{display:flex;flex-direction:column;gap:10px}
+.opt{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:var(--glass);cursor:pointer;color:var(--muted)}
+.opt.correct{border-color:rgba(52,168,83,0.5);background:linear-gradient(90deg, rgba(52,168,83,0.08), rgba(52,168,83,0.02));color:var(--white)}
+.opt.wrong{border-color:rgba(235,77,75,0.25);background:linear-gradient(90deg, rgba(235,77,75,0.04), rgba(235,77,75,0.01));color:var(--white)}
+.score{margin-top:12px;color:var(--muted)}
+
+/* Chat stub */
+.chat-toggle{position:fixed;right:20px;bottom:20px;border-radius:999px;padding:12px 14px;background:linear-gradient(90deg,var(--accent),#4da5ff);color:white;border:0;box-shadow:0 10px 30px rgba(26,115,232,0.2);cursor:pointer}
+.chat-panel{position:fixed;right:20px;bottom:80px;width:360px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:12px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,0.5);display:none;flex-direction:column;max-height:70vh;overflow:auto}
+.chat-log{height:320px;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+.msg{padding:8px 10px;border-radius:10px;max-width:80%}
+.msg.user{align-self:flex-end;background:linear-gradient(90deg,#0b77ff,#4da5ff);color:white}
+.msg.bot{align-self:flex-start;background:rgba(255,255,255,0.03);color:var(--muted);border:1px solid rgba(255,255,255,0.02)}
+
+/* Footer */
+.footer{margin-top:24px;padding:18px;color:var(--muted);text-align:center;font-size:13px}
+
+/* Responsive */
+@media (max-width:900px){
+  .hero{flex-direction:column;align-items:flex-start;padding:24px}
+  .right{width:100%}
+  .grid{grid-template-columns:1fr}
+  .chat-panel{right:12px;left:12px;width:auto}
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="brand">
+    <div class="logo-wrap" aria-hidden="true">
+      <!-- small robot hugging globe icon (stylized) -->
+      <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="30" fill="#eaf4ff"/>
+        <g transform="translate(6,6) scale(0.9)">
+          <ellipse cx="24" cy="24" rx="14" ry="14" fill="#1A73E8"/>
+          <path d="M8 30c0-6 7-11 16-11s16 5 16 11" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <h1>Vn Explore AI</h1>
+      <div style="font-size:12px;color:var(--muted)">Trợ lý AI khám phá địa lý Việt Nam</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="btn">Giới thiệu</button>
+    <button class="btn">Quiz</button>
+    <button class="btn cta">Bắt đầu</button>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="left">
+      <div class="kicker">Vietnam AI Contest • Dự án</div>
+      <div class="title">Khám phá địa lý cùng trợ lý AI thân thiện</div>
+      <div class="lead">Vn Explore AI kết hợp mô phỏng, quiz và trợ lý AI để nâng cao kỹ năng địa lý bằng trải nghiệm tương tác. Thử đoán vị trí, học lịch sử địa danh, và nhận gợi ý trực tiếp từ trợ lý AI.</div>
+      <div class="hero-actions">
+        <button class="action" onclick="document.getElementById('quiz').scrollIntoView({behavior:'smooth'})">Bắt đầu Quiz</button>
+        <button class="action secondary" onclick="toggleChat()">Mở Trợ lý AI</button>
+      </div>
+    </div>
+    <div class="right">
+      <div class="card" role="img" aria-label="Robot ôm quả địa cầu">
+        <div class="scene">
+          <!-- Friendly robot C hugging globe (SVG illustration) -->
+          <svg class="robot-svg" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- globe -->
+            <g transform="translate(20,30)">
+              <circle cx="140" cy="120" r="80" fill="#cfe8ff"/>
+              <circle cx="140" cy="120" r="70" fill="#8cc7ff"/>
+              <path d="M60 120c40-40 180-40 220 0" stroke="#cfe8ff" stroke-width="3" opacity="0.8"/>
+              <path d="M140 50v140" stroke="#a7d7ff" stroke-width="3" opacity="0.8"/>
+            </g>
+            <!-- robot body hugging -->
+            <g transform="translate(0,0)">
+              <rect x="38" y="150" rx="22" ry="22" width="120" height="80" fill="#ffffff" opacity="0.95" stroke="#dceeff" stroke-width="1.5"/>
+              <circle cx="98" cy="120" r="28" fill="#ffffff" stroke="#cfe8ff" stroke-width="1.2"/>
+              <!-- eyes -->
+              <circle cx="88" cy="118" r="5" fill="#0b4ef0"/>
+              <circle cx="108" cy="118" r="5" fill="#0b4ef0"/>
+              <path d="M84 132c6 6 18 6 24 0" stroke="#9fb9ff" stroke-width="2" fill="none" opacity="0.9"/>
+              <!-- arms hugging globe -->
+              <path d="M118 150c20-20 48-40 90-40" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M62 150c-20-20-48-40-90-40" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+          </svg>
+        </div>
+        <div style="padding:12px;color:var(--muted)">
+          <div style="font-weight:700;color:var(--white)">Vn Explore AI</div>
+          <div style="font-size:13px;margin-top:6px">Robot trợ lý thân thiện đồng hành cùng bạn trong mỗi thử thách địa lý.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container grid">
+    <div class="panel" id="quiz">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:800;color:var(--white);font-size:16px">Quiz: Đoán vị trí</div>
+        <div style="font-size:12px;color:var(--muted)">Điểm: <span id="points">0</span></div>
+      </div>
+      <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:12px 0 16px">
+      <div class="quiz-question" id="question">Hình ảnh dưới đây là một địa danh nổi tiếng ở Việt Nam. Bạn đoán là nơi nào?</div>
+      <div style="margin-bottom:12px"><img id="qimg" src="https://images.unsplash.com/photo-1549887534-3b6f0b9d4b5c?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" alt="địa danh" style="width:100%;border-radius:10px;object-fit:cover;max-height:240px"></div>
+      <div class="options" id="options">
+        <div class="opt" data-answer="a">Hạ Long</div>
+        <div class="opt" data-answer="b">Đà Nẵng</div>
+        <div class="opt" data-answer="c">Sapa</div>
+        <div class="opt" data-answer="d">Huế</div>
+      </div>
+      <div class="score" id="result"></div>
+    </div>
+
+    <aside class="panel">
+      <div style="font-weight:800;color:var(--white);margin-bottom:8px">Trợ lý AI (Bản demo)</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Nhấn "Mở Trợ lý AI" để thử giao tiếp. Phiên bản demo trả lời mô phỏng.</div>
+      <div style="margin-top:12px">
+        <button class="btn cta" onclick="toggleChat()">Mở Trợ lý AI</button>
+      </div>
+      <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:12px 0">
+      <div style="font-weight:700;color:var(--white);margin-bottom:8px">Tùy chỉnh nhanh</div>
+      <div style="font-size:13px;color:var(--muted)">Bạn có thể thay ảnh quiz, thêm câu hỏi, hoặc kết nối OpenAI để trợ lý trả lời thực tế.</div>
+    </aside>
+  </section>
+
+  <div class="footer">
+    © Vn Explore AI — Vietnam AI Contest • Thiết kế demo bởi nhóm
+  </div>
+</main>
+
+<!-- Chat panel -->
+<button class="chat-toggle" onclick="toggleChat()">💬 Trợ lý AI</button>
+<div class="chat-panel" id="chatPanel" role="dialog" aria-label="Trợ lý AI">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-weight:800;color:var(--white)">Vn Explore AI</div>
+    <button class="btn" onclick="closeChat()">Đóng</button>
+  </div>
+  <div class="chat-log" id="chatLog">
+    <div class="msg bot">Chào bạn! Mình là Vn Explore AI. Bạn muốn khám phá địa lý ở đâu hôm nay?</div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <input id="chatInput" placeholder="Hỏi về địa điểm, mẹo quiz..." style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--white)">
+    <button class="btn cta" onclick="sendChat()">Gửi</button>
+  </div>
+</div>
+
+<script>
+// Quiz logic (demo)
+let points = 0;
+const correct = 'a';
+document.querySelectorAll('.opt').forEach(el => el.addEventListener('click', () => {
+  if(el.classList.contains('correct') || el.classList.contains('wrong')) return;
+  const ans = el.dataset.answer;
+  if(ans === correct){ el.classList.add('correct'); points += 10; document.getElementById('result').textContent = 'Chính xác! +10 điểm.';}
+  else{ el.classList.add('wrong'); document.getElementById('result').textContent = 'Sai rồi. Đáp án đúng là Hạ Long.';}
+  document.getElementById('points').textContent = points;
+}));
+
+// Chat stub (demo responses)
+function toggleChat(){
+  const panel = document.getElementById('chatPanel');
+  panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+  if(panel.style.display === 'flex') document.getElementById('chatInput').focus();
+}
+function closeChat(){ document.getElementById('chatPanel').style.display = 'none' }
+function sendChat(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const log = document.getElementById('chatLog');
+  const user = document.createElement('div'); user.className = 'msg user'; user.textContent = text; log.appendChild(user);
+  input.value = '';
+  // simulated bot reply
+  const bot = document.createElement('div'); bot.className = 'msg bot'; bot.textContent = 'Đang tìm hiểu...'; log.appendChild(bot);
+  log.scrollTop = log.scrollHeight;
+  setTimeout(()=>{
+    bot.textContent = 'Gợi ý: Tìm hiểu đặc điểm địa hình, khí hậu và điểm nhấn du lịch. Nếu bạn muốn, kết nối OpenAI để trả lời chính xác hơn.';
+  },900);
+}
+
+// small niceties: keyboard enter sends
+document.getElementById('chatInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') sendChat(); });
+
+</script>
+</body>
+</html>
